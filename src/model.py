@@ -22,10 +22,9 @@ def impute_data(df, numerical_cols, is_train=True, imputer=None):
     df = df.copy()
     if is_train:
         knn_imputer = KNNImputer(n_neighbors=5)
-        df[numerical_cols + ["Discount"]] = knn_imputer.fit_transform(df[numerical_cols + ["Discount"]])
+        df[numerical_cols] = knn_imputer.fit_transform(df[numerical_cols])
     else:
-        df[numerical_cols + ["Discount"]] = imputer.transform(df[numerical_cols + ["Discount"]])
-    df['Discount_knn'] = df['Discount']
+        df[numerical_cols] = imputer.transform(df[numerical_cols])
     return df, knn_imputer if is_train else None
 
 def remove_outliers(df, column):
@@ -42,7 +41,7 @@ def remove_outliers(df, column):
     return filtered_df
 
 def build_pipeline():
-    numerical = ["Sales", "Unit Price (log)", "Shipping Cost (log)", "Product Base Margin", "Discount_knn"]
+    numerical = ["Sales", "Unit Price (log)", "Shipping Cost (log)", "Product Base Margin", "Discount"]
     categorical = ["Order Priority", "Product Category", "Product Sub-Category", "Product Container", "Product Name", "Province", "Region", "Customer Segment", "Ship Mode", "Customer Name"]
 
     preprocessor = ColumnTransformer(
@@ -76,7 +75,7 @@ def train_model(data_path, model_path='best_rf_model.pkl'):
     print("Training set size:", len(train_set))
     print("Test set size:", len(test_set))
 
-    numerical_cols = ["Order Quantity", "Sales", "Unit Price", "Profit", "Shipping Cost", "Product Base Margin"]
+    numerical_cols = ["Order Quantity", "Sales", "Unit Price", "Profit", "Shipping Cost", "Product Base Margin" , "Discount"]
     train_set, knn_imputer = impute_data(train_set, numerical_cols, is_train=True)
     test_set, _ = impute_data(test_set, numerical_cols, is_train=False, imputer=knn_imputer)
 
@@ -89,7 +88,7 @@ def train_model(data_path, model_path='best_rf_model.pkl'):
     test_set['Shipping Cost (log)'] = np.log1p(test_set['Shipping Cost'])
     test_set['Unit Price (log)'] = np.log1p(test_set['Unit Price'])
 
-    numerical = ["Sales", "Unit Price (log)", "Shipping Cost (log)", "Product Base Margin", "Discount_knn"]
+    numerical = ["Sales", "Unit Price (log)", "Shipping Cost (log)", "Product Base Margin", "Discount"]
     categorical = ["Order Priority", "Product Category", "Product Sub-Category", "Product Container", "Product Name", "Province", "Region", "Customer Segment", "Ship Mode", "Customer Name"]
     features = numerical + categorical
     target = "Profit"
